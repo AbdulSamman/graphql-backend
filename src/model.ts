@@ -1,20 +1,15 @@
-import fs from 'fs';
-import { IBook, IRawBook } from './interfaces.js';
+import fs from "fs";
+import { IJob, ISkill } from "./interfaces.js";
 
-const rawBooks: IRawBook[] = JSON.parse(fs.readFileSync('./src/data/rawBooks.json', 'utf8'));
-
-const books: IBook[] = rawBooks.map(rawBook => {
-	return {
-		id: rawBook.id,
-		idCode: rawBook.idCode,
-		title: rawBook.title,
-		description: rawBook.description,
-		language: rawBook.language === '' ? 'english' : rawBook.language
-	}
-});
+const jobs: IJob[] = JSON.parse(
+  fs.readFileSync("./src/data/jobs.json", "utf8")
+);
+const skills: ISkill[] = JSON.parse(
+  fs.readFileSync("./src/data/skills.json", "utf8")
+);
 
 export const getApiInstructions = () => {
-	return `
+  return `
 <style>
 	body {
 		background-color: #444;
@@ -22,22 +17,46 @@ export const getApiInstructions = () => {
 		color: #fff;
 		font-family: courier;
 	}
+	li{
+		padding:10px
+	}
 	code {
 		background-color: #333;
+ 
+	}
+	a{
+		color: yellow
 	}
 </style>
-<h1>Book Site API</h1>
+
+<h1>Jobs/Skills Site API</h1>
+<h2>GraphQL</h2>
 <ul>
-	<li><code>/books</code> - all books</li>
-	<li><code>/books/3</code> - book with id 3</li>
-</ul>
+	<li> <code> <a href="/graphql">/jobs</a> </code>- all jobs</li>
+	<li> <code><a href="/graphql">/skills</a></code>- all skills</li>
+</ul> 
+
+
+<h2>REST</h2>
+<ul>
+	<li> <code> <a href="/jobs">/jobs</a> </code>- all jobs</li>
+	<li> <code><a href="/skills">/skills</a></code>- all skills</li>
+</ul> 
 	`;
-}
+};
 
-export const getBooks = (): IBook[] => {
-	return books;
-}
+export const getJobs = (): IJob[] => {
+  return jobs;
+};
 
-export const getBook = (id: number): IBook => {
-	return books.find(m => m.id === id);
-}
+export const getJob = (id: number): IJob => {
+  return jobs.find((m) => m.id === id);
+};
+
+export const getSkills = (): ISkill[] => {
+  return skills;
+};
+
+export const getSkill = (idCode: string): ISkill => {
+  return skills.find((m) => m.idCode === idCode);
+};
