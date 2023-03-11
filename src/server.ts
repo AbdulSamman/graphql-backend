@@ -3,7 +3,75 @@ import express from "express";
 import cors from "cors";
 import * as config from "./config.js";
 import { graphqlHTTP } from "express-graphql";
-import { schema } from "./schema.js";
+//import { schema } from "./schema.js";
+
+import {
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLInt,
+  GraphQLString,
+  GraphQLList,
+} from "graphql";
+const jobs = model.getJobs();
+
+const JobType = new GraphQLObjectType({
+  name: "Job",
+  fields: () => ({
+    id: { type: GraphQLInt },
+    title: { type: GraphQLString },
+    company: { type: GraphQLString },
+    url: { type: GraphQLString },
+    description: { type: GraphQLString },
+    skillList: { type: GraphQLString },
+    publicationDate: { type: GraphQLString },
+  }),
+});
+
+const rootQuery = new GraphQLObjectType({
+  name: "RootQueryType",
+  fields: {
+    mainMessage: {
+      type: GraphQLString,
+      resolve(parent, args) {
+        return "Hello";
+      },
+    },
+    jobs: {
+      type: new GraphQLList(JobType),
+      args: { id: { type: GraphQLInt } },
+      resolve(parent, args) {
+        return jobs;
+      },
+    },
+  },
+});
+
+const mutation = new GraphQLObjectType({
+  name: "Mutation",
+  fields: {
+    createJob: {
+      type: JobType,
+      args: {
+        title: { type: GraphQLString },
+        company: { type: GraphQLString },
+        url: { type: GraphQLString },
+      },
+      resolve(parent, args) {
+        const newJob = {
+          id: jobs.length + 1,
+          title: args.title,
+          company: args.company,
+          url: args.url,
+          description: "",
+          skillList: "",
+          publicationDate: "",
+        };
+        jobs.push(newJob);
+        return newJob;
+      },
+    },
+  },
+});
 
 const app = express();
 app.use(cors());
@@ -11,26 +79,13 @@ app.use(cors());
 // GraphQL
 // root was wir zurückgeben
 
-const root = {
-  message: () => {
-    return `this is the message`;
-  },
-  departments: () => {
-    return ["Sales", "Marketing", "Development", "Executive"];
-  },
-  //so
-  jobs: model.getJobs(),
-  // doer so
-  skills: () => {
-    return model.getSkills();
-  },
-};
+const schema = new GraphQLSchema({ query: rootQuery, mutation });
 
 app.use(
   "/graphql",
   graphqlHTTP({
     schema,
-    rootValue: root,
+
     graphiql: true,
   })
 );
@@ -49,38 +104,6 @@ app.get("/skills", (req: express.Request, res: express.Response) => {
   res.json(model.getSkills());
 });
 
-app.get("/jobs/:id", (req: express.Request, res: express.Response) => {
-  const id = Number(req.params.id);
-  if (isNaN(id)) {
-    res.status(400).send({
-      error: true,
-      message: "sent string, should be number",
-    });
-  } else {
-    const job = model.getJob(id);
-    if (job === undefined) {
-      res.status(404).send({
-        error: true,
-        message: "id did not correspond to an existing item",
-      });
-    } else {
-      res.json(job);
-    }
-  }
-});
-
-app.get("/skills/:idCode", (req: express.Request, res: express.Response) => {
-  const idCode = req.params.idCode;
-  const skill = model.getSkill(idCode);
-  if (skill === undefined) {
-    res.status(404).send({
-      error: true,
-      message: "idCode did not correspond to an existing item",
-    });
-  } else {
-    res.json(skill);
-  }
-});
 app.listen(config.port, () => {
   console.log(`listening on port http://localhost:${config.port}`);
 });
